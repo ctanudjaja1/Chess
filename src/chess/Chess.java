@@ -15,6 +15,7 @@ public class Chess {
      *         the contents of the returned ReturnPlay instance.
      */
     static Board board = new Board();
+    static GameLogic logic       = new GameLogic(board);
     static Player currentPlayer = Player.white;
 
     private static ReturnPiece.PieceType convertPieceType(Piece p) {
@@ -64,6 +65,16 @@ public class Chess {
         }
         move = move.trim();
 
+        // --- RESIGN ---
+        if(move.equalsIgnoreCase("resign")){
+            result.piecesOnBoard = getPiecesOnBoard();
+            result.message = (currentPlayer == Player.white)
+                    ? ReturnPlay.Message.RESIGN_BLACK_WINS
+                    : ReturnPlay.Message.RESIGN_WHITE_WINS;
+            return result;
+        }
+
+        /*Parsing */
         // Parse the move string, e.g. "e2 e4"
         String[] parts = move.split("\\s+");
 
@@ -76,17 +87,12 @@ public class Chess {
 
         String fromStr = parts[0]; // e.g. "e2"
         String toStr   = parts[1]; // e.g. "e4"
+        String promotion = null;
+        boolean drawRequest = false;
 
-        // Check there is a piece at the source square belonging to current player
-
-        if (fromStr.length() != 2 || toStr.length() != 2
-                || fromStr.charAt(0) < 'a' || fromStr.charAt(0) > 'h'
-                || toStr.charAt(0) < 'a' || toStr.charAt(0) > 'h'
-                || fromStr.charAt(1) < '1' || fromStr.charAt(1) > '8'
-                || toStr.charAt(1) < '1' || toStr.charAt(1) > '8') {
-            result.message = ReturnPlay.Message.ILLEGAL_MOVE;
-            result.piecesOnBoard = getPiecesOnBoard();
-            return result;
+        for(int i = 2; i < parts.length; i++){
+            if(parts[i].equalsIgnoreCase("draw?")){drawRequest = true;}
+            else promotion = parts[i];
         }
 
         // Convert file letter to column index: 'a'=0, 'b'=1, ... 'h'=7
@@ -96,18 +102,30 @@ public class Chess {
 
         int toCol = toStr.charAt(0) - 'a';
         int toRow = toStr.charAt(1) - '1';
-        Piece piece = board.board[fromRow][fromCol];
-        // Move the piece
-        board.board[toRow][toCol]     = piece;
-        board.board[fromRow][fromCol] = null;
-        piece.row = toRow;
-        piece.col = toCol;
+
+        //Illegal Move
+        if(!logic.isLegal(fromRow, fromCol, toRow, toCol, currentPlayer)){
+            result.piecesOnBoard = getPiecesOnBoard();
+            result.message = ReturnPlay.Message.ILLEGAL_MOVE;
+            return result;
+        }
+
+        //Execute
+        logic.executeMove(fromRow, fromCol, toRow, toCol, currentPlayer, promotion);
+
+        //Draw (move execute first, then draw)
+        if(drawRequest){
+            result.piecesOnBoard = getPiecesOnBoard();
+            result.message = ReturnPlay.Message.DRAW;
+            return result;
+        }
+
 
         // Switch turns
         currentPlayer = (currentPlayer == Player.white) ? Player.black : Player.white;
 
-        result.message = null;
         result.piecesOnBoard = getPiecesOnBoard();
+        result.message = logic.getMessage(currentPlayer);
         return result;
     }
 
@@ -118,6 +136,7 @@ public class Chess {
     public static void start() {
         /* FILL IN THIS METHOD */
         board.setupInitialPosition();
+        logic.reset();
         currentPlayer = Player.white;
     }
 }
