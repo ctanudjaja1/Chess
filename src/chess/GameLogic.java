@@ -92,7 +92,19 @@ public class GameLogic {
 
     public void executeMove(int fromRow, int fromCol, int toRow, int toCol,
                             Chess.Player player, String promotion) {
-        Piece piece = board.board[fromRow][fromCol];
+        Piece piece    = board.board[fromRow][fromCol];
+        Piece captured = board.board[toRow][toCol];
+
+        // If a rook is captured on its starting square, revoke castling rights for that side
+        if (captured instanceof Rook) {
+            if (captured.player == Chess.Player.white && toRow == 0) {
+                if (toCol == 0) whiteRookAMoved = true;
+                if (toCol == 7) whiteRookHMoved = true;
+            } else if (captured.player == Chess.Player.black && toRow == 7) {
+                if (toCol == 0) blackRookAMoved = true;
+                if (toCol == 7) blackRookHMoved = true;
+            }
+        }
 
         enPassantRow = -1;
         enPassantCol = -1;
