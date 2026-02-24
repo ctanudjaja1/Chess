@@ -56,5 +56,6 @@ public class Board {
         //King
         board[7][4] = new King(Chess.Player.black, 7, 4);
 
+
     }
 }

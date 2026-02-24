@@ -57,6 +57,11 @@ public class Chess {
         /* FOLLOWING LINE IS A PLACEHOLDER TO MAKE COMPILER HAPPY */
         /* WHEN YOU FILL IN THIS METHOD, YOU NEED TO RETURN A ReturnPlay OBJECT */
         ReturnPlay result = new ReturnPlay();
+        if (move == null || move.isBlank()) {
+            result.message = ReturnPlay.Message.ILLEGAL_MOVE;
+            result.piecesOnBoard = getPiecesOnBoard();
+            return result;
+        }
         move = move.trim();
 
         // Parse the move string, e.g. "e2 e4"
@@ -72,6 +77,18 @@ public class Chess {
         String fromStr = parts[0]; // e.g. "e2"
         String toStr   = parts[1]; // e.g. "e4"
 
+        // Check there is a piece at the source square belonging to current player
+
+        if (fromStr.length() != 2 || toStr.length() != 2
+                || fromStr.charAt(0) < 'a' || fromStr.charAt(0) > 'h'
+                || toStr.charAt(0) < 'a' || toStr.charAt(0) > 'h'
+                || fromStr.charAt(1) < '1' || fromStr.charAt(1) > '8'
+                || toStr.charAt(1) < '1' || toStr.charAt(1) > '8') {
+            result.message = ReturnPlay.Message.ILLEGAL_MOVE;
+            result.piecesOnBoard = getPiecesOnBoard();
+            return result;
+        }
+
         // Convert file letter to column index: 'a'=0, 'b'=1, ... 'h'=7
         int fromCol = fromStr.charAt(0) - 'a';
         // Convert rank digit to row index: '1'=0, '2'=1, ... '8'=7
@@ -79,15 +96,7 @@ public class Chess {
 
         int toCol = toStr.charAt(0) - 'a';
         int toRow = toStr.charAt(1) - '1';
-
-        // Check there is a piece at the source square belonging to current player
         Piece piece = board.board[fromRow][fromCol];
-        if (piece == null || piece.player != currentPlayer) {
-            result.message = ReturnPlay.Message.ILLEGAL_MOVE;
-            result.piecesOnBoard = getPiecesOnBoard();
-            return result;
-        }
-
         // Move the piece
         board.board[toRow][toCol]     = piece;
         board.board[fromRow][fromCol] = null;
