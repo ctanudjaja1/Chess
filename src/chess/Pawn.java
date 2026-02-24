@@ -40,4 +40,5 @@ public class Pawn extends Piece {
         int direction = (player == Chess.Player.white) ? 1 : -1;
         return (targetRow - row) == direction && Math.abs(targetCol - col) == 1;
     }
+    // double pawn push
 }
